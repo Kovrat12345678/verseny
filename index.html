@@ -182,7 +182,7 @@
 <body>
   <!-- Background characters -->
   <img class="bg-char-left" src="kovix 16 oldalán nagyba legyen.png" alt="">
-  <img class="bg-char-right" src="gakuiblox oldalán nagyba legyen.png" alt="">
+  <img class="bg-char-right" src="RellaGaming oldalán nagyba legyen.png" alt="">
 
   <div class="wrap">
     <div class="header">
@@ -200,8 +200,8 @@
       </div>
       <div class="vs">VS</div>
       <div class="player-card p2">
-        <img class="profile-pic" src="Edgar (Gakuix kedvenc karaktere és a win emote).png" alt="Gakuix">
-        <div class="player-name">Gakuix</div>
+        <img class="profile-pic" src="Edgar (RellaGaming kedvenc karaktere és a win emote).png" alt="RellaGaming">
+        <div class="player-name">RellaGaming</div>
         <div class="fav-char">🧣 Edgar</div>
         <div class="score" id="score2">0</div>
         <div class="score-label">Győzelem</div>
@@ -212,12 +212,12 @@
       <div class="streak-item"><div class="streak-val" id="totalGames">0</div><div class="streak-lbl">Összes meccs</div></div>
       <div class="streak-item"><div class="streak-val" id="streak">-</div><div class="streak-lbl">Sorozat</div></div>
       <div class="streak-item"><div class="streak-val" id="winrate1">0%</div><div class="streak-lbl">Kovix WR</div></div>
-      <div class="streak-item"><div class="streak-val" id="winrate2">0%</div><div class="streak-lbl">Gakuix WR</div></div>
+      <div class="streak-item"><div class="streak-val" id="winrate2">0%</div><div class="streak-lbl">RellaGaming WR</div></div>
     </div>
 
     <div class="buttons">
       <button class="btn btn-blue" onclick="win(1)">🏆 Kovix nyert</button>
-      <button class="btn btn-red" onclick="win(2)">🏆 Gakuix nyert</button>
+      <button class="btn btn-red" onclick="win(2)">🏆 RellaGaming nyert</button>
       <button class="btn btn-gray btn-sm" onclick="undo()">↩️ Visszavonás</button>
       <button class="btn btn-gray btn-sm" onclick="resetAll()">🗑️ Reset</button>
     </div>
@@ -246,7 +246,7 @@
 
     const PLAYERS = {
       1: { name:"Kovix", winEmote:"win.png", loseEmote:"nem win.png", color:"#3b82f6" },
-      2: { name:"Gakuix", winEmote:"Edgar (Gakuix kedvenc karaktere és a win emote).png", loseEmote:"Gakuix nem nyerő emote.png", color:"#ef4444" }
+      2: { name:"RellaGaming", winEmote:"Edgar (RellaGaming kedvenc karaktere és a win emote).png", loseEmote:"RellaGaming nem nyerő emote.png", color:"#ef4444" }
     };
 
     const MAP_ICONS = {
@@ -271,7 +271,7 @@
       let streak = '-';
       if (data.s1 > 0 || data.s2 > 0) {
         if (data.s1 > data.s2) streak = 'Kovix vezet 🔥';
-        else if (data.s2 > data.s1) streak = 'Gakuix vezet 🔥';
+        else if (data.s2 > data.s1) streak = 'RellaGaming vezet 🔥';
         else streak = 'Döntetlen ⚡';
       }
       document.getElementById('streak').textContent = streak;
@@ -323,7 +323,7 @@
     function undo() {
       if (data.s1 === 0 && data.s2 === 0) return;
       // can't know who won last, so just ask
-      const who = prompt('Kit vonod vissza? (1 = Kovix, 2 = Gakuix)');
+      const who = prompt('Kit vonod vissza? (1 = Kovix, 2 = RellaGaming)');
       if (who === '1' && data.s1 > 0) { data.s1--; save(); render(); }
       else if (who === '2' && data.s2 > 0) { data.s2--; save(); render(); }
     }
