@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brawl Stars 1v1</title>
+  <link rel="icon" href="Logo_2025.png">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Outfit',sans-serif;
+      min-height:100vh;
+      background: url('háttér.png') center/cover no-repeat fixed;
+      color:#fff;
+      overflow:hidden;
+    }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background: rgba(0,0,0,0.5);
+      z-index:0;
+    }
+
+    /* Character images in background */
+    .bg-char-left, .bg-char-right {
+      position:fixed; bottom:0; z-index:1; pointer-events:none;
+      height:85vh; max-height:800px;
+      object-fit:contain;
+      filter: drop-shadow(0 0 30px rgba(0,0,0,0.6));
+      opacity:0.6;
+    }
+    .bg-char-left { left:-20px; }
+    .bg-char-right { right:-20px; }
+
+    .wrap {
+      position:relative; z-index:2; min-height:100vh;
+      display:flex; flex-direction:column; align-items:center;
+      padding:20px; overflow-y:auto;
+    }
+
+    /* Header */
+    .header { text-align:center; margin-bottom:16px; }
+    .header img { width:100px; filter:drop-shadow(0 0 20px rgba(255,180,0,0.5)); }
+    .header h1 { font-family:'Bungee',sans-serif; font-size:2rem; color:#fbbf24; text-shadow:0 0 20px rgba(251,191,36,0.6); margin-top:4px; }
+
+    /* Scoreboard */
+    .scoreboard {
+      display:flex; gap:24px; align-items:center; justify-content:center;
+      width:100%; max-width:600px; margin-bottom:20px;
+    }
+    .player-card {
+      flex:1; background:rgba(0,0,0,0.65); backdrop-filter:blur(12px);
+      border-radius:20px; padding:20px; text-align:center;
+      border:2px solid rgba(255,255,255,0.1);
+      transition:transform 0.3s, box-shadow 0.3s;
+    }
+    .player-card:hover { transform:translateY(-4px); }
+    .player-card.p1 { border-color:rgba(59,130,246,0.5); }
+    .player-card.p2 { border-color:rgba(239,68,68,0.5); }
+    .player-card.p1:hover { box-shadow:0 0 30px rgba(59,130,246,0.3); }
+    .player-card.p2:hover { box-shadow:0 0 30px rgba(239,68,68,0.3); }
+
+    .profile-pic {
+      width:72px; height:72px; border-radius:50%; object-fit:cover;
+      border:3px solid rgba(255,255,255,0.3);
+      margin:0 auto 8px; display:block; background:#111;
+    }
+    .p1 .profile-pic { border-color:#3b82f6; box-shadow:0 0 15px rgba(59,130,246,0.4); }
+    .p2 .profile-pic { border-color:#ef4444; box-shadow:0 0 15px rgba(239,68,68,0.4); }
+
+    .player-name { font-family:'Bungee',sans-serif; font-size:1.3rem; margin-bottom:4px; }
+    .p1 .player-name { color:#60a5fa; }
+    .p2 .player-name { color:#f87171; }
+    .fav-char { font-size:0.85rem; color:#94a3b8; margin-bottom:12px; }
+
+    .score { font-size:3.5rem; font-weight:900; line-height:1; }
+    .p1 .score { color:#3b82f6; text-shadow:0 0 20px rgba(59,130,246,0.5); }
+    .p2 .score { color:#ef4444; text-shadow:0 0 20px rgba(239,68,68,0.5); }
+    .score-label { font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+    .vs { font-family:'Bungee',sans-serif; font-size:2.2rem; color:#fbbf24; text-shadow:0 0 15px rgba(251,191,36,0.5); flex-shrink:0; }
+
+    /* Buttons */
+    .buttons { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
+    .btn {
+      padding:12px 28px; border:none; border-radius:14px;
+      font-family:'Outfit',sans-serif; font-weight:700; font-size:1rem;
+      cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px;
+    }
+    .btn:active { transform:scale(0.95); }
+    .btn-blue { background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; box-shadow:0 4px 15px rgba(59,130,246,0.4); }
+    .btn-blue:hover { box-shadow:0 6px 25px rgba(59,130,246,0.6); transform:translateY(-2px); }
+    .btn-red { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; box-shadow:0 4px 15px rgba(239,68,68,0.4); }
+    .btn-red:hover { box-shadow:0 6px 25px rgba(239,68,68,0.6); transform:translateY(-2px); }
+    .btn-gray { background:rgba(255,255,255,0.1); color:#94a3b8; border:1px solid rgba(255,255,255,0.15); }
+    .btn-gray:hover { background:rgba(255,255,255,0.2); color:#fff; }
+    .btn-sm { padding:8px 16px; font-size:0.85rem; }
+
+    /* Streak bar */
+    .streak-bar {
+      width:100%; max-width:600px; background:rgba(0,0,0,0.55); backdrop-filter:blur(8px);
+      border-radius:14px; padding:12px 20px; margin-bottom:16px;
+      display:flex; justify-content:space-between; align-items:center;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .streak-item { text-align:center; }
+    .streak-val { font-size:1.3rem; font-weight:900; color:#fbbf24; }
+    .streak-lbl { font-size:0.65rem; color:#94a3b8; text-transform:uppercase; }
+
+    /* Emote overlay */
+    .emote-overlay {
+      position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.88);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity 0.5s;
+    }
+    .emote-overlay.show { opacity:1; pointer-events:all; }
+    .emote-overlay.fade-out { opacity:0; }
+    .emote-overlay .winner-text {
+      font-family:'Bungee',sans-serif; font-size:2.5rem; margin-bottom:20px;
+      animation: bounceIn 0.5s ease;
+    }
+    .emote-overlay .emote-media {
+      max-width:320px; max-height:320px; border-radius:20px;
+      box-shadow:0 0 40px rgba(251,191,36,0.4);
+      animation: zoomIn 0.4s ease;
+    }
+    .emote-overlay .map-icon-big {
+      width:200px; height:200px; object-fit:contain;
+      animation: zoomIn 0.4s ease;
+      filter: drop-shadow(0 0 30px rgba(251,191,36,0.5));
+    }
+
+    @keyframes bounceIn {
+      0% { transform:scale(0.3); opacity:0; }
+      50% { transform:scale(1.1); }
+      100% { transform:scale(1); opacity:1; }
+    }
+    @keyframes zoomIn {
+      from { transform:scale(0.5); opacity:0; }
+      to { transform:scale(1); opacity:1; }
+    }
+
+    /* Map selector */
+    .map-selector {
+      width:100%; max-width:600px;
+      background:rgba(0,0,0,0.55); backdrop-filter:blur(8px);
+      border-radius:16px; padding:14px 16px; border:1px solid rgba(255,255,255,0.08);
+      margin-bottom:16px;
+    }
+    .map-selector h3 { font-size:0.85rem; color:#94a3b8; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; text-align:center; }
+    .map-btns { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    .map-btn {
+      padding:8px 18px; border-radius:12px; border:2px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06); color:#94a3b8; font-family:'Outfit',sans-serif;
+      font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.2s;
+      display:flex; align-items:center; gap:6px;
+    }
+    .map-btn img { width:22px; height:22px; object-fit:contain; }
+    .map-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+    .map-btn.active {
+      border-color:#fbbf24; color:#fbbf24;
+      background:rgba(251,191,36,0.12); box-shadow:0 0 15px rgba(251,191,36,0.2);
+    }
+    .current-map {
+      text-align:center; margin-top:10px; font-family:'Bungee',sans-serif;
+      font-size:1.1rem; color:#fbbf24;
+    }
+
+    @media(max-width:768px) {
+      .bg-char-left, .bg-char-right { height:50vh; opacity:0.35; }
+      .bg-char-left { left:-40px; }
+      .bg-char-right { right:-40px; }
+    }
+    @media(max-width:500px) {
+      .scoreboard { flex-direction:column; gap:12px; }
+      .vs { font-size:1.5rem; }
+      .header h1 { font-size:1.5rem; }
+      .bg-char-left, .bg-char-right { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background characters -->
+  <img class="bg-char-left" src="kovix 16 oldalán nagyba legyen.png" alt="">
+  <img class="bg-char-right" src="gakuiblox oldalán nagyba legyen.png" alt="">
+
+  <div class="wrap">
+    <div class="header">
+      <img src="Logo_2025.png" alt="Brawl Stars">
+      <h1>1v1 TRACKER</h1>
+    </div>
+
+    <div class="scoreboard">
+      <div class="player-card p1">
+        <img class="profile-pic" src="kovix 16 profila.png" alt="Kovix">
+        <div class="player-name">Kovix</div>
+        <div class="fav-char">⭐ Starr Nova</div>
+        <div class="score" id="score1">0</div>
+        <div class="score-label">Győzelem</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="player-card p2">
+        <img class="profile-pic" src="Edgar (Gakuix kedvenc karaktere és a win emote).png" alt="Gakuix">
+        <div class="player-name">Gakuix</div>
+        <div class="fav-char">🧣 Edgar</div>
+        <div class="score" id="score2">0</div>
+        <div class="score-label">Győzelem</div>
+      </div>
+    </div>
+
+    <div class="streak-bar">
+      <div class="streak-item"><div class="streak-val" id="totalGames">0</div><div class="streak-lbl">Összes meccs</div></div>
+      <div class="streak-item"><div class="streak-val" id="streak">-</div><div class="streak-lbl">Sorozat</div></div>
+      <div class="streak-item"><div class="streak-val" id="winrate1">0%</div><div class="streak-lbl">Kovix WR</div></div>
+      <div class="streak-item"><div class="streak-val" id="winrate2">0%</div><div class="streak-lbl">Gakuix WR</div></div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn btn-blue" onclick="win(1)">🏆 Kovix nyert</button>
+      <button class="btn btn-red" onclick="win(2)">🏆 Gakuix nyert</button>
+      <button class="btn btn-gray btn-sm" onclick="undo()">↩️ Visszavonás</button>
+      <button class="btn btn-gray btn-sm" onclick="resetAll()">🗑️ Reset</button>
+    </div>
+
+    <div class="map-selector">
+      <h3>🗺️ Játékmód</h3>
+      <div class="map-btns">
+        <button class="map-btn" onclick="pickMap('Showdown')"><img src="showdown_icon.png"> Showdown</button>
+        <button class="map-btn" onclick="pickMap('Knockout')">💀 Knockout</button>
+        <button class="map-btn" onclick="pickMap('Brawl Ball')"><img src="brawl_ball_icon.png"> Brawl Ball</button>
+        <button class="map-btn" onclick="pickMap('Gem Grab')"><img src="gem_grab_icon.png"> Gem Grab</button>
+        <button class="map-btn" onclick="pickMap('Bounty')"><img src="bounty_icon.png"> Bounty</button>
+      </div>
+      <div class="current-map" id="currentMap"></div>
+    </div>
+  </div>
+
+  <!-- Overlay (emote + map) -->
+  <div class="emote-overlay" id="emoteOverlay">
+    <div class="winner-text" id="winnerText"></div>
+    <div id="emoteContainer"></div>
+  </div>
+
+  <script>
+    let data = JSON.parse(localStorage.getItem('brawl1v1') || '{"s1":0,"s2":0,"map":""}');
+
+    const PLAYERS = {
+      1: { name:"Kovix", winEmote:"win.png", loseEmote:"nem win.png", color:"#3b82f6" },
+      2: { name:"Gakuix", winEmote:"Edgar (Gakuix kedvenc karaktere és a win emote).png", loseEmote:"Gakuix nem nyerő emote.png", color:"#ef4444" }
+    };
+
+    const MAP_ICONS = {
+      'Showdown': 'showdown_icon.png',
+      'Knockout': null,
+      'Brawl Ball': 'brawl_ball_icon.png',
+      'Gem Grab': 'gem_grab_icon.png',
+      'Bounty': 'bounty_icon.png'
+    };
+
+    let overlayTimer = null;
+
+    function save() { localStorage.setItem('brawl1v1', JSON.stringify(data)); }
+
+    function render() {
+      document.getElementById('score1').textContent = data.s1;
+      document.getElementById('score2').textContent = data.s2;
+      const total = data.s1 + data.s2;
+      document.getElementById('totalGames').textContent = total;
+      document.getElementById('winrate1').textContent = total ? Math.round(data.s1/total*100)+'%' : '0%';
+      document.getElementById('winrate2').textContent = total ? Math.round(data.s2/total*100)+'%' : '0%';
+      let streak = '-';
+      if (data.s1 > 0 || data.s2 > 0) {
+        if (data.s1 > data.s2) streak = 'Kovix vezet 🔥';
+        else if (data.s2 > data.s1) streak = 'Gakuix vezet 🔥';
+        else streak = 'Döntetlen ⚡';
+      }
+      document.getElementById('streak').textContent = streak;
+      document.querySelectorAll('.map-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(data.map));
+      });
+      document.getElementById('currentMap').textContent = data.map ? '🎮 ' + data.map : '';
+    }
+
+    function showOverlay(html, duration) {
+      const overlay = document.getElementById('emoteOverlay');
+      const text = document.getElementById('winnerText');
+      const container = document.getElementById('emoteContainer');
+      if (overlayTimer) clearTimeout(overlayTimer);
+      overlay.classList.remove('fade-out');
+      text.innerHTML = html.title || '';
+      text.style.color = html.color || '#fbbf24';
+      container.innerHTML = html.content || '';
+      overlay.classList.add('show');
+      overlayTimer = setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => {
+          overlay.classList.remove('show','fade-out');
+        }, 500);
+      }, duration);
+    }
+
+    function pickMap(name) {
+      data.map = name;
+      save(); render();
+      const icon = MAP_ICONS[name];
+      const imgHtml = icon
+        ? `<img class="map-icon-big" src="${icon}">`
+        : `<div style="font-size:6rem;">💀</div>`;
+      showOverlay({ title:`🗺️ ${name}`, color:'#fbbf24', content:imgHtml }, 3000);
+    }
+
+    function win(p) {
+      if (p===1) data.s1++; else data.s2++;
+      save(); render();
+      const pl = PLAYERS[p];
+      showOverlay({
+        title: '🏆 ' + pl.name + ' NYERT! 🏆',
+        color: pl.color,
+        content: `<img class="emote-media" src="${pl.winEmote}">`
+      }, 3000);
+    }
+
+    function undo() {
+      if (data.s1 === 0 && data.s2 === 0) return;
+      // can't know who won last, so just ask
+      const who = prompt('Kit vonod vissza? (1 = Kovix, 2 = Gakuix)');
+      if (who === '1' && data.s1 > 0) { data.s1--; save(); render(); }
+      else if (who === '2' && data.s2 > 0) { data.s2--; save(); render(); }
+    }
+
+    function resetAll() {
+      if (!confirm('Biztosan törlöd az összes eredményt?')) return;
+      data={s1:0,s2:0,map:data.map}; save(); render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

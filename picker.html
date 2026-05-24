@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Brawl Stars csapatválasztó - Válassz brawlert és pályát!">
+  <title>Brawl Tracker ⚡ Csapatválasztó</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="stars"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo"><span>⚡</span> Brawl Tracker</a>
+    <div class="nav-links">
+      <a href="index.html">📊 Eredmények</a>
+      <a href="picker.html" class="active">🎮 Csapatválasztó</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>🎮 Csapatválasztó</h1>
+      <p>Válasszatok játékmódot, pályát és brawlert!</p>
+    </div>
+
+    <!-- Game Mode -->
+    <div class="picker-section">
+      <h2>🕹️ Játékmód</h2>
+      <div class="mode-grid" id="modeGrid"></div>
+    </div>
+
+    <!-- Map -->
+    <div class="picker-section" id="mapSection" style="display:none;">
+      <h2>🗺️ Pálya</h2>
+      <div class="map-grid" id="mapGrid"></div>
+    </div>
+
+    <!-- Brawler Pickers -->
+    <div class="picker-section" id="brawlerSection">
+      <h2>⚔️ Brawler Választás</h2>
+      <div class="filter-tabs" id="filterTabs"></div>
+      <div id="brawlerPickers"></div>
+    </div>
+
+    <!-- Current Lineup Preview -->
+    <div class="picker-section">
+      <h2>👥 Jelenlegi Felállás</h2>
+      <div class="lineup-preview" id="lineupPreview">
+        <div class="empty-state"><div class="empty-icon">🎯</div><p>Válasszatok brawlereket!</p></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="lockIn()">🔒 Felállás Mentése</button>
+      <button class="btn btn-secondary" onclick="clearPicks()">🔄 Újrakezdés</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let data = DB.load();
+    let selectedMode = '';
+    let selectedMap = '';
+    let selectedBrawlers = ['', '', ''];
+    let activeFilter = 'all';
+    let activePlayerTab = 0;
+
+    function init() {
+      if (!data.setupDone) { window.location.href = 'index.html'; return; }
+      // Restore lineup if exists
+      if (data.currentLineup) {
+        selectedMode = data.currentLineup.mode || '';
+        selectedMap = data.currentLineup.map || '';
+        selectedBrawlers = data.currentLineup.brawlers || ['','',''];
+      }
+      renderModes();
+      renderFilters();
+      renderBrawlerPickers();
+      renderLineup();
+      if (selectedMode) {
+        renderMaps();
+        document.getElementById('mapSection').style.display = '';
+      }
+    }
+
+    // ---- MODES ----
+    function renderModes() {
+      document.getElementById('modeGrid').innerHTML = GAME_MODES.map(m =>
+        `<div class="mode-card ${selectedMode===m.id?'selected':''}" onclick="pickMode('${m.id}')">
+          <span class="mode-icon">${m.icon}</span>${m.name}
+        </div>`
+      ).join('');
+    }
+
+    function pickMode(id) {
+      selectedMode = id;
+      selectedMap = '';
+      renderModes();
+      renderMaps();
+      document.getElementById('mapSection').style.display = '';
+      saveLineup();
+    }
+
+    // ---- MAPS ----
+    function renderMaps() {
+      const maps = MAPS[selectedMode] || [];
+      document.getElementById('mapGrid').innerHTML = maps.map(m =>
+        `<div class="map-card ${selectedMap===m?'selected':''}" onclick="pickMap('${m}')">
+          <div class="map-name">${m}</div>
+        </div>`
+      ).join('');
+    }
+
+    function pickMap(m) {
+      selectedMap = m;
+      renderMaps();
+      saveLineup();
+    }
+
+    // ---- FILTERS ----
+    function renderFilters() {
+      const rarities = ['all','common','epic','mythic','legendary','ultraLegendary'];
+      const labels = { all:'Mind', ...RARITY_LABELS };
+      document.getElementById('filterTabs').innerHTML = rarities.map(r =>
+        `<div class="filter-tab ${activeFilter===r?'active':''}" onclick="setFilter('${r}')">${labels[r]}</div>`
+      ).join('');
+    }
+
+    function setFilter(f) {
+      activeFilter = f;
+      renderFilters();
+      renderBrawlerPickers();
+    }
+
+    // ---- BRAWLER PICKERS ----
+    function renderBrawlerPickers() {
+      const colors = ['var(--accent-blue)','var(--accent-yellow)','var(--accent-green)'];
+      const emojis = ['🔵','🟡','🟢'];
+      const filtered = activeFilter === 'all' ? BRAWLERS : BRAWLERS.filter(b => b.rarity === activeFilter);
+
+      document.getElementById('brawlerPickers').innerHTML = data.players.map((p, pi) => {
+        const grid = filtered.map(b => {
+          const takenBy = selectedBrawlers.findIndex((sb,si) => sb === b.name && si !== pi);
+          const isSelected = selectedBrawlers[pi] === b.name;
+          const cls = isSelected ? 'selected' : (takenBy >= 0 ? 'taken' : '');
+          return `<div class="brawler-cell rarity-${b.rarity} ${cls}" onclick="pickBrawler(${pi},'${b.name.replace(/'/g,"\\'")}')" title="${b.name}">
+            <span class="brawler-icon">${b.icon}</span>
+            <span>${b.name.length > 7 ? b.name.slice(0,6)+'..' : b.name}</span>
+          </div>`;
+        }).join('');
+
+        const currentB = selectedBrawlers[pi] ? getBrawler(selectedBrawlers[pi]) : null;
+        const badge = currentB ? `<span style="margin-left:auto;font-size:0.85rem;color:${colors[pi]};">${currentB.icon} ${currentB.name}</span>` : '';
+
+        return `<div class="brawler-picker card" style="margin-bottom:16px;border-top:3px solid ${colors[pi]};">
+          <h3>${emojis[pi]} ${p.name} ${badge}</h3>
+          <div class="brawler-grid">${grid}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function pickBrawler(playerIdx, brawlerName) {
+      if (selectedBrawlers[playerIdx] === brawlerName) {
+        selectedBrawlers[playerIdx] = '';
+      } else {
+        selectedBrawlers[playerIdx] = brawlerName;
+      }
+      renderBrawlerPickers();
+      renderLineup();
+      saveLineup();
+    }
+
+    // ---- LINEUP ----
+    function renderLineup() {
+      const hasAny = selectedBrawlers.some(b => b);
+      if (!hasAny && !selectedMode) {
+        document.getElementById('lineupPreview').innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>Válasszatok brawlereket!</p></div>';
+        return;
+      }
+      const colors = ['var(--accent-blue)','var(--accent-yellow)','var(--accent-green)'];
+      const modeInfo = selectedMode ? GAME_MODES.find(m => m.id === selectedMode) : null;
+
+      let html = '';
+      if (modeInfo || selectedMap) {
+        html += `<div style="width:100%;text-align:center;margin-bottom:12px;">`;
+        if (modeInfo) html += `<span style="font-size:1.1rem;font-weight:700;">${modeInfo.icon} ${modeInfo.name}</span>`;
+        if (selectedMap) html += `<span style="color:var(--text-secondary);margin-left:12px;">📍 ${selectedMap}</span>`;
+        html += `</div>`;
+      }
+
+      html += data.players.map((p, i) => {
+        const b = selectedBrawlers[i] ? getBrawler(selectedBrawlers[i]) : null;
+        return `<div class="lineup-slot">
+          <div class="slot-avatar" style="border-color:${colors[i]};">${b ? b.icon : '❓'}</div>
+          <div class="slot-player">${p.name}</div>
+          <div class="slot-brawler" style="color:${colors[i]};">${b ? b.name : 'Nincs választva'}</div>
+        </div>`;
+      }).join('');
+
+      document.getElementById('lineupPreview').innerHTML = html;
+    }
+
+    // ---- SAVE & ACTIONS ----
+    function saveLineup() {
+      data.currentLineup = { mode: selectedMode, map: selectedMap, brawlers: [...selectedBrawlers] };
+      DB.save(data);
+    }
+
+    function lockIn() {
+      saveLineup();
+      const allPicked = selectedBrawlers.every(b => b);
+      if (allPicked && selectedMode) {
+        alert('✅ Felállás elmentve! Hajrá a meccshez! 🎮\nAz eredményt az Eredmények oldalon tudjátok rögzíteni.');
+      } else {
+        alert('💾 Mentve! Tipp: válasszatok játékmódot és mindhárom brawlert a teljes felálláshoz.');
+      }
+    }
+
+    function clearPicks() {
+      selectedMode = '';
+      selectedMap = '';
+      selectedBrawlers = ['','',''];
+      data.currentLineup = null;
+      DB.save(data);
+      document.getElementById('mapSection').style.display = 'none';
+      renderModes();
+      renderBrawlerPickers();
+      renderLineup();
+    }
+
+    init();
+  </script>
+</body>
+</html>
