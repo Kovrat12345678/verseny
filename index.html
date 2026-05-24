@@ -27,10 +27,31 @@
       height:85vh; max-height:800px;
       object-fit:contain;
       filter: drop-shadow(0 0 30px rgba(0,0,0,0.6));
-      opacity:0.6;
+      opacity:0.65;
     }
-    .bg-char-left { left:-20px; }
-    .bg-char-right { right:-20px; }
+    .bg-char-left { left:0; object-position: left bottom; }
+    .bg-char-right { right:0; object-position: right bottom; }
+
+    /* Animated star background style */
+    .stars {
+      position: fixed; inset:0; z-index:0; pointer-events:none;
+      background: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, rgba(239,68,68,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.05) 0%, transparent 50%);
+    }
+    .stars::before, .stars::after {
+      content:''; position:absolute; inset:0;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.4), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1.5px 1.5px at 90px 40px, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.4), transparent);
+      background-size: 200px 150px;
+      animation: twinkle 5s ease-in-out infinite alternate;
+    }
+    .stars::after { background-size: 300px 200px; animation-delay: -2.5s; opacity:0.6; }
+    @keyframes twinkle { from{opacity:0.4} to{opacity:1} }
 
     .wrap {
       position:relative; z-index:2; min-height:100vh;
@@ -40,7 +61,7 @@
 
     /* Header */
     .header { text-align:center; margin-bottom:16px; }
-    .header img { width:100px; filter:drop-shadow(0 0 20px rgba(255,180,0,0.5)); }
+    .header img { width:220px; filter:drop-shadow(0 0 25px rgba(255,180,0,0.6)); }
     .header h1 { font-family:'Bungee',sans-serif; font-size:2rem; color:#fbbf24; text-shadow:0 0 20px rgba(251,191,36,0.6); margin-top:4px; }
 
     /* Scoreboard */
@@ -168,8 +189,8 @@
 
     @media(max-width:768px) {
       .bg-char-left, .bg-char-right { height:50vh; opacity:0.35; }
-      .bg-char-left { left:-40px; }
-      .bg-char-right { right:-40px; }
+      .bg-char-left { left:0; }
+      .bg-char-right { right:0; }
     }
     @media(max-width:500px) {
       .scoreboard { flex-direction:column; gap:12px; }
@@ -180,6 +201,8 @@
   </style>
 </head>
 <body>
+  <div class="stars"></div>
+
   <!-- Background characters -->
   <img class="bg-char-left" src="kovix 16 oldalán nagyba legyen.png" alt="">
   <img class="bg-char-right" src="RellaGaming oldalán nagyba legyen.png" alt="">
